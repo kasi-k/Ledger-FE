@@ -78,7 +78,7 @@ const numericOnly = (v) => {
 // Particulars start with a capital letter by default.
 const capFirst = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4100";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://ledger-be-jlva.onrender.com";
 // Full URL for a stored invoice image (backend serves /uploads statically).
 const invoiceUrl = (u) => (u ? `${API_BASE}${u}` : "");
 
