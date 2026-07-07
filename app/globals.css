@@ -1,0 +1,1634 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  background: #f4f5f7;
+  color: #1a1a1a;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+}
+
+/* --- App shell: sidebar + main --- */
+.app-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden; /* the shell itself never scrolls */
+}
+
+.sidebar {
+  width: 232px;
+  flex-shrink: 0;
+  background: #fff;
+  border-right: 1px solid #e6e9ee;
+  padding: 22px 16px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto; /* fixed panel; scrolls on its own only if it's tall */
+}
+
+.side-logo {
+  padding: 4px 8px 18px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid #eef1f4;
+}
+
+.side-logo-img {
+  height: 32px;
+  width: auto;
+  mix-blend-mode: multiply;
+}
+
+.side-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.side-link {
+  text-align: left;
+  background: transparent;
+  color: #475569;
+  padding: 11px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.side-link:hover {
+  background: #f1f5f9;
+}
+
+.side-link-active {
+  background: #2563eb;
+  color: #fff;
+}
+
+.side-link-active:hover {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.side-user {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid #eef1f4;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.side-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  padding: 0 6px;
+}
+
+.side-signout {
+  width: 100%;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 28px 32px 60px;
+  overflow-y: auto; /* only the main content scrolls */
+}
+
+.main-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid #e3e6ea;
+}
+
+.main-head .brand-meta {
+  text-align: left;
+  border-left: none;
+  padding-left: 0;
+}
+
+/* Logo shown only on print (screen brand lives in the sidebar) */
+.print-brand {
+  display: none;
+  height: 38px;
+  width: auto;
+  mix-blend-mode: multiply;
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: auto;
+    min-height: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid #e6e9ee;
+    padding: 12px 16px;
+  }
+  .side-logo {
+    border: none;
+    padding: 0 10px 0 4px;
+    margin: 0;
+  }
+  .side-nav {
+    flex-direction: row;
+  }
+  .side-user {
+    margin: 0 0 0 auto;
+    padding-top: 0;
+    border: none;
+    flex-direction: row;
+    align-items: center;
+  }
+  .main {
+    padding: 20px 18px 50px;
+  }
+}
+
+h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+/* --- Brand / logo — transparent header, logo in full colour --- */
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 4px 4px 18px;
+  margin-bottom: 26px;
+  background: transparent;
+  border-bottom: 1px solid #dfe3e8; /* subtle rule for structure */
+}
+
+/* No tile — logo sits transparently, original colours intact. */
+.logo-badge {
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  padding: 0;
+}
+
+.logo-img {
+  height: 46px;
+  width: auto;
+  display: block;
+  /* Logo has a white background; multiply drops the white into the light
+     header so it reads as transparent, while the dark wordmark stays crisp. */
+  mix-blend-mode: multiply;
+}
+
+.brand-meta {
+  text-align: right;
+  border-left: 1px solid #dfe3e8;
+  padding-left: 20px;
+}
+
+.brand-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.brand-period {
+  margin-top: 5px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: #111827;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+
+.controls-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.user-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 8px;
+  padding-left: 14px;
+  border-left: 1px solid #dfe3e8;
+}
+
+.user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.role-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.role-admin {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.role-emp {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* --- Tabs --- */
+.tabs {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.tab-group {
+  display: flex;
+  gap: 6px;
+  background: #eef1f4;
+  padding: 4px;
+  border-radius: 10px;
+}
+
+.tab {
+  background: transparent;
+  color: #475569;
+  padding: 8px 18px;
+  border-radius: 7px;
+  font-weight: 600;
+}
+
+.tab-active {
+  background: #fff;
+  color: #111827;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* --- Dashboard cards --- */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.stat {
+  background: #fff;
+  border: 1px solid #e3e6ea;
+  border-radius: 10px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #8a94a0;
+}
+
+.stat-val {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 8px 0 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-val.debit {
+  color: #dc2626;
+}
+.stat-val.credit {
+  color: #16a34a;
+}
+.stat-val.balance {
+  color: #2563eb;
+}
+
+.stat-sub {
+  font-size: 12px;
+  color: #9aa3ad;
+}
+
+/* --- Charts --- */
+.chart-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.chart-head h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.dot.debit-bg {
+  background: #ef4444;
+}
+.dot.credit-bg {
+  background: #22c55e;
+  margin-left: 8px;
+}
+
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.bar-col {
+  flex: 1 1 0;
+  min-width: 64px;
+  background: transparent;
+  padding: 6px 4px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.bar-col:hover {
+  background: #f4f6f9;
+}
+
+.bar-col-active {
+  background: #eef4ff;
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 5px;
+  height: 150px;
+  width: 100%;
+}
+
+.bar {
+  width: 22px;
+  border-radius: 4px 4px 0 0;
+  min-height: 2px;
+  transition: height 0.2s;
+}
+
+.bar-debit {
+  background: #ef4444;
+}
+.bar-credit {
+  background: #22c55e;
+}
+.bar-balance {
+  background: #3b82f6;
+  width: 30px;
+}
+
+.bar-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.bar-val {
+  font-size: 11px;
+  font-weight: 700;
+  color: #334155;
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 700px) {
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* --- Audit log --- */
+.audit-table th,
+.audit-table td {
+  height: auto;
+  padding: 9px 12px;
+}
+
+.when-col {
+  width: 165px;
+  white-space: nowrap;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+}
+
+.user-col {
+  width: 110px;
+  font-weight: 600;
+}
+
+.action-col {
+  width: 140px;
+}
+
+.audit-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #eef1f4;
+  color: #334155;
+}
+
+.audit-login {
+  background: #dcfce7;
+  color: #166534;
+}
+.audit-login_failed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.audit-save_month {
+  background: #dbeafe;
+  color: #1e40af;
+}
+.audit-delete_entry {
+  background: #ffe4e6;
+  color: #9f1239;
+}
+.audit-set_starting_balance,
+.audit-set_grace_day,
+.audit-unlock_month,
+.audit-lock_month {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.audit-claim_entry,
+.audit-unclaim_entry {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.audit-changes {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.audit-month {
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 2px;
+}
+
+.chg {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.chg-add {
+  color: #16a34a;
+}
+
+.chg-rem {
+  color: #dc2626;
+}
+
+.audit-muted {
+  color: #8a94a0;
+}
+
+/* --- Month quick-jump chips --- */
+.month-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.chips-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #8a94a0;
+  margin-right: 4px;
+}
+
+.chip {
+  background: #eef1f4;
+  color: #334155;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.chip:hover {
+  background: #e2e6ea;
+}
+
+.chip-active {
+  background: #2563eb;
+  color: #fff;
+}
+
+.chip-active:hover {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+/* --- Date-range report --- */
+.report-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 6px 0 14px;
+}
+
+.report-title h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.cell-text {
+  display: block;
+  padding: 8px 13px;
+  font-size: 14px;
+}
+
+/* --- Admin Controls --- */
+.admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.admin-status {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.admin-status .saved {
+  color: #16a34a;
+}
+.admin-status .error-inline {
+  color: #dc2626;
+}
+
+.admin-card h2 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.admin-card-wide {
+  grid-column: 1 / -1;
+}
+
+.admin-hint {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.admin-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.admin-input {
+  padding: 9px 11px;
+  border: 1px solid #cdd3da;
+  border-radius: 7px;
+  font-size: 15px;
+  width: 160px;
+  font-family: inherit;
+}
+
+.admin-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.admin-note {
+  margin: 12px 0 0;
+  font-size: 12px;
+  color: #8a94a0;
+}
+
+.admin-muted {
+  color: #9aa3ad;
+}
+
+.lock-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.lock-table th,
+.lock-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid #eceef1;
+}
+
+.lock-table th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #5a6472;
+}
+
+.lock-action {
+  text-align: right;
+}
+
+.lock-status {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.st-open {
+  background: #dcfce7;
+  color: #166534;
+}
+.st-unlocked {
+  background: #fef3c7;
+  color: #92400e;
+}
+.st-locked {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+@media (max-width: 760px) {
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Login page --- */
+.login-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  background: #fff;
+  border: 1px solid #e3e6ea;
+  border-radius: 14px;
+  padding: 34px 30px;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.login-logo {
+  height: 42px;
+  width: auto;
+  align-self: center;
+  margin-bottom: 18px;
+  mix-blend-mode: multiply;
+}
+
+.login-title {
+  text-align: center;
+  font-size: 20px;
+  margin: 0 0 4px;
+}
+
+.login-sub {
+  text-align: center;
+  color: #8a94a0;
+  font-size: 14px;
+  margin: 0 0 22px;
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.login-field span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #5a6472;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.login-field input {
+  padding: 11px 12px;
+  border: 1px solid #cdd3da;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.login-field input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.login-btn {
+  margin-top: 6px;
+  padding: 12px;
+  font-size: 15px;
+}
+
+.login-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+}
+
+.month-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.month-picker label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #5a6472;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.month-picker input,
+.month-select {
+  padding: 8px 10px;
+  border: 1px solid #cdd3da;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #fff;
+  font-family: inherit;
+}
+
+.month-select {
+  min-width: 170px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.month-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.filter-group {
+  display: flex;
+  gap: 18px;
+  align-items: flex-end;
+}
+
+.ledger-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.ledger-title h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.header-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.status-line {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  font-size: 13px;
+}
+
+.status-line .dirty {
+  color: #b45309;
+}
+
+.status-line .saved {
+  color: #16a34a;
+}
+
+.status-line .error-inline {
+  color: #dc2626;
+}
+
+/* Month-lock UI */
+.lock-banner {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  color: #92400e;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.lock-pill {
+  display: inline-flex;
+  align-items: center;
+  background: #fef3c7;
+  color: #92400e;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 6px;
+}
+
+.cell-input:disabled {
+  color: #64748b;
+  cursor: not-allowed;
+  -webkit-text-fill-color: #64748b; /* keep readable on Safari */
+}
+
+/* --- Spreadsheet look --- */
+table.sheet {
+  border: 1px solid #dfe3e8;
+  table-layout: fixed;
+  width: 100%;
+  min-width: 680px;
+}
+
+table.sheet th,
+table.sheet td {
+  border: 1px solid #eceef1;
+  padding: 0;
+  height: 40px;
+  overflow: hidden;
+}
+
+table.sheet th {
+  padding: 11px 13px;
+  height: auto;
+}
+
+/* Fixed column widths so Particulars gets the space (amounts stay compact). */
+table.sheet th.amount,
+table.sheet td.amount {
+  width: 118px;
+}
+
+/* Balance column (6th) is wider — it holds the largest, accumulating numbers. */
+table.sheet th:nth-child(6),
+table.sheet td:nth-child(6) {
+  width: 148px;
+}
+
+/* Footer (Totals / Closing) cells: match the body's 10px padding so the
+   amounts line up under their columns instead of sitting flush to the edge. */
+table.sheet tfoot td {
+  padding: 12px 13px;
+}
+
+/* Opening row: pad the label + dash cells (the balance cell uses an input). */
+tr.opening td:nth-child(3) {
+  padding-left: 13px;
+}
+tr.opening td:nth-child(4),
+tr.opening td:nth-child(5) {
+  padding-right: 13px;
+}
+
+/* Highlighted table heading */
+table.sheet thead th {
+  background: #1f2937;
+  color: #fff;
+  border-color: #1f2937;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+table.sheet thead th:first-child {
+  border-top-left-radius: 6px;
+}
+
+table.sheet thead th:last-child {
+  border-top-right-radius: 6px;
+}
+
+.num-col {
+  width: 40px;
+  text-align: center;
+  color: #9aa3ad;
+  font-size: 12px;
+}
+
+.act-col {
+  width: 150px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+/* Invoice attach / view controls in the actions column */
+.inv-upload {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+
+.inv-badge {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  font-size: 15px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+
+.inv-badge:hover {
+  background: #d1fae5;
+}
+
+.inv-item {
+  display: inline-flex;
+  align-items: center;
+}
+
+.inv-x {
+  color: #b91c1c;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 3px;
+}
+
+.inv-x:hover {
+  color: #7f1d1d;
+}
+
+/* Invoice images appended to a printed / expanded statement */
+.statement-invoices {
+  margin-top: 22px;
+  break-inside: avoid;
+}
+
+.statement-invoices-title {
+  font-size: 14px;
+  margin: 0 0 12px;
+  padding-top: 12px;
+  border-top: 2px solid #0b1220;
+}
+
+.invoice-fig {
+  margin: 0 0 18px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.invoice-fig figcaption {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+.invoice-fig img {
+  max-width: 100%;
+  max-height: 640px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.invoice-pdf-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #1d4ed8;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* --- Download & claim modal --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.modal-title {
+  margin: 0 0 10px;
+  font-size: 18px;
+  color: #0b1220;
+}
+
+.modal-text {
+  margin: 0 0 22px;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.date-text {
+  display: block;
+  padding: 8px 13px;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Continuation lines of the same date: no top border so they read as a group. */
+tr.same-date td {
+  border-top: none;
+}
+
+tr.same-date .cell-input,
+tr.same-date .date-text {
+  padding-top: 4px;
+}
+
+.btn-mini {
+  background: #eef4ff;
+  color: #2563eb;
+  padding: 2px 7px;
+  font-size: 14px;
+  line-height: 1;
+  border-radius: 5px;
+}
+
+/* Claim button (admin) — refined outline style */
+.claim-btn {
+  background: #fff;
+  border: 1px solid #86efac;
+  color: #047857;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.claim-btn:hover {
+  background: #ecfdf5;
+  border-color: #34d399;
+}
+
+/* Claimed badge — professional uppercase pill */
+.claim-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 5px;
+  margin-right: 4px;
+}
+
+/* "Pending — not yet submitted" badge next to the statement title */
+.report-scope {
+  margin-left: 10px;
+  vertical-align: middle;
+}
+
+/* Download-statement bar on the ledger */
+.dl-bar {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.dl-title {
+  font-weight: 700;
+  color: #0b1220;
+  align-self: center;
+  margin-right: 4px;
+}
+
+.dl-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #475569;
+}
+
+.dl-field input {
+  padding: 7px 9px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  font-size: 14px;
+}
+
+.dl-status {
+  align-self: center;
+  flex-basis: 100%;
+}
+
+/* Saved claimed-reports — collapsed accordion */
+.report-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.report-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.report-card-open {
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.report-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.report-head:hover {
+  background: #f8fafc;
+}
+
+.report-head:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+}
+
+.report-chevron {
+  color: #94a3b8;
+  font-size: 14px;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.report-chevron.open {
+  transform: rotate(90deg);
+  color: #475569;
+}
+
+.report-headmain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.report-range {
+  font-weight: 700;
+  color: #0b1220;
+}
+
+.report-sub {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.report-badge {
+  color: #475569;
+  font-size: 13px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+.report-closing {
+  font-weight: 700;
+  color: #0b1220;
+  white-space: nowrap;
+}
+
+.report-dl {
+  flex-shrink: 0;
+}
+
+.report-body {
+  padding: 4px 14px 14px;
+  border-top: 1px solid #eef2f7;
+}
+
+@media (max-width: 640px) {
+  .report-head {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+  .report-headmain {
+    flex-basis: 100%;
+    order: -1;
+  }
+}
+
+/* The range statement lives on the ledger but only shows on paper. */
+.range-print {
+  display: none;
+}
+
+/* Claimed row — subtle tint + green accent bar, values stay dark/legible */
+tr.claimed-row td {
+  background: #f7fdfa;
+}
+
+tr.claimed-row td:first-child {
+  box-shadow: inset 3px 0 0 #10b981;
+}
+
+tr.claimed-row .cell-input:disabled {
+  color: #1e293b;
+  -webkit-text-fill-color: #1e293b;
+}
+
+.lock-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.btn-mini:hover {
+  background: #dbe7ff;
+}
+
+.cell-input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  padding: 8px 13px;
+  font-size: 14px;
+  font-family: inherit;
+  color: inherit;
+}
+
+.cell-input:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+  background: #fff;
+}
+
+.amount-input {
+  text-align: right;
+}
+
+.balance-cell {
+  padding: 8px 13px;
+  font-weight: 600;
+  background: #fafbfc;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e3e6ea;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow-x: auto;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1.2fr 2.4fr 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.date-col {
+  width: 90px;
+}
+
+tr.opening td,
+tr.closing td {
+  background: #fafbfc;
+  font-weight: 600;
+}
+
+tr.opening td {
+  border-bottom: 1px solid #eceef1;
+}
+
+tfoot tr.closing td {
+  border-top: none;
+}
+
+.opening-input {
+  background: #fffef6;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px #e4d9a8;
+}
+
+.print-only {
+  display: none;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #5a6472;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.field input,
+.field select {
+  padding: 9px 10px;
+  border: 1px solid #cdd3da;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #fff;
+}
+
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 16px;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+}
+
+.btn-secondary {
+  background: #eef1f4;
+  color: #1a1a1a;
+}
+
+.btn-secondary:hover {
+  background: #e2e6ea;
+}
+
+.btn-danger {
+  background: transparent;
+  color: #dc2626;
+  padding: 4px 8px;
+}
+
+.btn-danger:hover {
+  text-decoration: underline;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid #eceef1;
+}
+
+th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #5a6472;
+  background: #fafbfc;
+}
+
+td.amount,
+th.amount {
+  text-align: right;
+}
+
+tfoot td {
+  font-weight: 700;
+  border-top: 2px solid #d9dde2;
+}
+
+.empty {
+  text-align: center;
+  color: #8a94a0;
+  padding: 24px;
+}
+
+.error {
+  color: #dc2626;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+/* Remove the browser's default page header/footer (URL, date, page number). */
+@page {
+  margin: 0;
+}
+
+/* Print: brand + filled rows only; hide controls and empty sheet lines. */
+@media print {
+  body {
+    background: #fff;
+  }
+  /* Give the content its own margins since @page margin is now 0. */
+  .container,
+  .main {
+    padding: 14mm 12mm;
+    max-width: none;
+    height: auto;
+    overflow: visible;
+  }
+  .app-shell {
+    display: block;
+    height: auto;
+    overflow: visible;
+  }
+  /* Show the branding logo on the printout (sidebar is hidden). */
+  .print-brand {
+    display: block;
+  }
+  .main-head {
+    border-bottom: 2px solid #0b1220;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: inline !important;
+  }
+  /* By default a print shows the month ledger, not the range statement. */
+  .range-print {
+    display: none;
+  }
+  /* When downloading a date range, show ONLY the range statement. */
+  body.printing-range .range-print {
+    display: block !important;
+  }
+  body.printing-range .month-print {
+    display: none !important;
+  }
+  /* Empty / date-only scaffold rows are skipped on paper. */
+  tr.blank-row {
+    display: none !important;
+  }
+  .card {
+    border: none;
+    box-shadow: none;
+    padding: 0;
+  }
+  th {
+    background: #fff;
+  }
+  /* Show typed values cleanly without input chrome. */
+  .cell-input {
+    padding: 6px 10px;
+  }
+  .balance-cell {
+    background: #fff;
+  }
+}

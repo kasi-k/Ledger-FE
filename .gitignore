@@ -1,0 +1,20 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# next.js
+.next/
+out/
+build/
+
+# environment / secrets
+.env
+.env.local
+.env*.local
+
+# debug logs & OS cruft
+*.log
+npm-debug.log*
+.DS_Store
+.vercel
