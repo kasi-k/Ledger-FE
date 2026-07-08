@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import {
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  createContext,
+  useContext,
+} from "react";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "https://ledger-be-jlva.onrender.com";
 
@@ -109,6 +116,55 @@ function buildSheet(month, entries) {
   );
 }
 
+// ============================ Toasts ============================
+const ToastContext = createContext(() => {});
+const useToast = () => useContext(ToastContext);
+
+const TOAST_ICON = { success: "✓", error: "✕", info: "ℹ" };
+
+function ToastProvider({ children }) {
+  const [toasts, setToasts] = useState([]);
+  const idRef = useRef(0);
+
+  const remove = useCallback(
+    (id) => setToasts((list) => list.filter((t) => t.id !== id)),
+    []
+  );
+
+  // toast(message, type) — type: "success" | "error" | "info" (default).
+  const toast = useCallback(
+    (message, type = "info") => {
+      if (!message) return;
+      const id = ++idRef.current;
+      setToasts((list) => [...list, { id, message, type }]);
+      // Errors linger a little longer so they can be read.
+      setTimeout(() => remove(id), type === "error" ? 6000 : 3500);
+      return id;
+    },
+    [remove]
+  );
+
+  return (
+    <ToastContext.Provider value={toast}>
+      {children}
+      <div className="toast-wrap no-print" aria-live="polite" aria-atomic="false">
+        {toasts.map((t) => (
+          <div
+            key={t.id}
+            className={"toast toast-" + t.type}
+            role="status"
+            onClick={() => remove(t.id)}
+          >
+            <span className="toast-icon">{TOAST_ICON[t.type] || TOAST_ICON.info}</span>
+            <span className="toast-msg">{t.message}</span>
+            <span className="toast-close" aria-hidden="true">×</span>
+          </div>
+        ))}
+      </div>
+    </ToastContext.Provider>
+  );
+}
+
 // ============================ Auth gate ============================
 export default function Home() {
   const [token, setToken] = useState(null);
@@ -142,27 +198,31 @@ export default function Home() {
   }
 
   if (!ready) return null;
-  if (!token) return <Login onLogin={login} />;
   return (
-    <Ledger
-      token={token}
-      username={username}
-      role={role}
-      onLogout={logout}
-    />
+    <ToastProvider>
+      {!token ? (
+        <Login onLogin={login} />
+      ) : (
+        <Ledger
+          token={token}
+          username={username}
+          role={role}
+          onLogout={logout}
+        />
+      )}
+    </ToastProvider>
   );
 }
 
 // ============================ Login page ============================
 function Login({ onLogin }) {
+  const toast = useToast();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function submit(e) {
     e.preventDefault();
-    setError("");
     setBusy(true);
     try {
       const res = await fetch(`${API}/api/login`, {
@@ -175,9 +235,10 @@ function Login({ onLogin }) {
         throw new Error(d.error || "Login failed");
       }
       const data = await res.json();
+      toast(`Welcome, ${data.username}.`, "success");
       onLogin(data.token, data.username, data.role);
     } catch (err) {
-      setError(err.message);
+      toast(err.message, "error");
     } finally {
       setBusy(false);
     }
@@ -209,8 +270,6 @@ function Login({ onLogin }) {
           />
         </label>
 
-        {error && <div className="error">{error}</div>}
-
         <button className="btn-primary login-btn" disabled={busy}>
           {busy ? "Signing in…" : "Sign in"}
         </button>
@@ -221,6 +280,7 @@ function Login({ onLogin }) {
 
 // ============================ Ledger ============================
 function Ledger({ token, username, role, onLogout }) {
+  const toast = useToast();
   const isAdmin = role === "admin";
   const [view, setView] = useState("ledger"); // "ledger" | "audit"
   const [month, setMonth] = useState(currentMonth());
@@ -230,8 +290,6 @@ function Ledger({ token, username, role, onLogout }) {
   const [editable, setEditable] = useState(true);
   const [rows, setRows] = useState([]);
   const [dirty, setDirty] = useState(false);
-  const [error, setError] = useState("");
-  const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
 
   // Date-range download ("statement for accounts") — lives on the ledger itself.
@@ -239,6 +297,8 @@ function Ledger({ token, username, role, onLogout }) {
   const [dlTo, setDlTo] = useState(todayIso());
   const [reports, setReports] = useState([]);
   const [pendingDownload, setPendingDownload] = useState(null); // { data, count }
+  const [pendingDeleteRow, setPendingDeleteRow] = useState(null); // row index awaiting confirm
+  const [pendingDeleteInvoice, setPendingDeleteInvoice] = useState(null); // { id, name } awaiting confirm
 
   // fetch wrapper that attaches the token and signs out on 401.
   const authFetch = useCallback(
@@ -281,7 +341,6 @@ function Ledger({ token, username, role, onLogout }) {
   const loadLedger = useCallback(
     async (m) => {
       setLoading(true);
-      setError("");
       try {
         const res = await authFetch(`${API}/api/ledger?month=${m}`);
         if (!res.ok) throw new Error("Failed to load ledger");
@@ -291,12 +350,12 @@ function Ledger({ token, username, role, onLogout }) {
         setRows(buildSheet(m, data.entries));
         setDirty(false);
       } catch (err) {
-        setError(err.message);
+        toast(err.message, "error");
       } finally {
         setLoading(false);
       }
     },
-    [authFetch]
+    [authFetch, toast]
   );
 
   useEffect(() => {
@@ -322,12 +381,10 @@ function Ledger({ token, username, role, onLogout }) {
   }, [view]);
 
   function handleMonthChange(e) {
-    setStatus("");
     setMonth(e.target.value || currentMonth());
   }
 
   function setCell(index, field, value) {
-    setStatus("");
     setDirty(true);
     setRows((prev) =>
       prev.map((r, i) => (i === index ? { ...r, [field]: value } : r))
@@ -335,29 +392,41 @@ function Ledger({ token, username, role, onLogout }) {
   }
 
   function addSameDate(index) {
-    setStatus("");
     setDirty(true);
     setRows((prev) => {
       const next = [...prev];
       next.splice(index + 1, 0, blankRow(prev[index].date, true));
       return next;
     });
+    toast("Row added — enter details and Save sheet.", "info");
   }
 
   function deleteRow(index) {
-    setStatus("");
     setDirty(true);
     setRows((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  // Confirmed from the delete-row dialog (see the modal below).
+  function confirmDeleteRow() {
+    if (pendingDeleteRow === null) return;
+    deleteRow(pendingDeleteRow);
+    setPendingDeleteRow(null);
+    toast("Row removed — click Save sheet to make it permanent.", "info");
+  }
+
+  // Confirmed from the delete-invoice dialog (see the modal below).
+  function confirmDeleteInvoice() {
+    if (!pendingDeleteInvoice) return;
+    deleteInvoice(pendingDeleteInvoice.id);
+    setPendingDeleteInvoice(null);
   }
 
   // Attach an invoice image to a saved entry (base64 upload — no page reload).
   async function uploadInvoice(row, fileList) {
     const file = fileList && fileList[0];
     if (!file) return;
-    setError("");
-    setStatus("");
     if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
-      setError("Please choose an image (JPG/PNG) or a PDF for the invoice.");
+      toast("Please choose an image (JPG/PNG) or a PDF for the invoice.", "error");
       return;
     }
     // If this row has unsaved edits its entry isn't in the backend yet — the
@@ -386,15 +455,14 @@ function Ledger({ token, username, role, onLogout }) {
         const d = await res.json().catch(() => ({}));
         throw new Error(d.error || "Failed to attach the invoice");
       }
-      setStatus("Invoice attached.");
+      toast("Invoice attached.", "success");
       loadLedger(month);
     } catch (err) {
-      setError(err.message);
+      toast(err.message, "error");
     }
   }
 
   async function deleteInvoice(id) {
-    setError("");
     try {
       const res = await authFetch(`${API}/api/invoice/${id}`, {
         method: "DELETE",
@@ -403,15 +471,14 @@ function Ledger({ token, username, role, onLogout }) {
         const d = await res.json().catch(() => ({}));
         throw new Error(d.error || "Failed to remove the invoice");
       }
+      toast("Invoice removed.", "success");
       loadLedger(month);
     } catch (err) {
-      setError(err.message);
+      toast(err.message, "error");
     }
   }
 
   async function saveSheet() {
-    setError("");
-    setStatus("");
     const entries = rows.filter(rowHasContent).map((r) => ({
       date: r.date || `${month}-01`,
       particulars: r.particulars,
@@ -429,25 +496,23 @@ function Ledger({ token, username, role, onLogout }) {
         throw new Error(data.error || "Failed to save sheet");
       }
       const data = await res.json();
-      setStatus(`Saved ${data.count} row(s).`);
+      toast(`Saved ${data.count} row(s).`, "success");
       loadLedger(month);
       loadMonths();
     } catch (err) {
-      setError(err.message);
+      toast(err.message, "error");
     }
   }
 
   // Download the statement for the chosen date range. Fetches the pending
   // entries, then opens a modal to confirm the action (see runDownload).
   async function prepareDownload() {
-    setError("");
-    setStatus("");
     if (!dlFrom || !dlTo) {
-      setError("Pick a From date and a To date to download.");
+      toast("Pick a From date and a To date to download.", "error");
       return;
     }
     if (dlFrom > dlTo) {
-      setError("'From' date must be on or before 'To' date.");
+      toast("'From' date must be on or before 'To' date.", "error");
       return;
     }
     try {
@@ -459,14 +524,15 @@ function Ledger({ token, username, role, onLogout }) {
       const data = await res.json();
       const n = data.entries.length;
       if (n === 0) {
-        setError(
-          "No pending entries in that date range — nothing new to download."
+        toast(
+          "No pending entries in that date range — nothing new to download.",
+          "info"
         );
         return;
       }
       setPendingDownload({ data, count: n });
     } catch (err) {
-      setError(err.message);
+      toast(err.message, "error");
     }
   }
 
@@ -493,13 +559,12 @@ function Ledger({ token, username, role, onLogout }) {
   async function runDownload(lock) {
     if (!pendingDownload) return;
     setPendingDownload(null);
-    setError("");
-    setStatus("");
     try {
       await downloadPdf(
         `${API}/api/statement.pdf?from=${dlFrom}&to=${dlTo}`,
-        `Statement_${dlFrom}_to_${dlTo}.pdf`
+        `Maarr Expenses ${formatDate(dlFrom)} to ${formatDate(dlTo)}.pdf`
       );
+      toast("Expenses downloaded.", "success");
       if (lock) {
         const res = await authFetch(`${API}/api/claim-range`, {
           method: "POST",
@@ -512,29 +577,29 @@ function Ledger({ token, username, role, onLogout }) {
         }
         const d = await res.json();
         const n = d.count || 0;
-        setStatus(
-          `Claimed ${n} entr${n === 1 ? "y" : "ies"}. ` +
-            `Saved as a report; won't appear on a future download.`
+        toast(
+          `Claimed ${n} entr${n === 1 ? "y" : "ies"} — saved as a report.`,
+          "success"
         );
         loadLedger(month);
         loadReports();
       }
     } catch (err) {
-      setError(err.message);
+      toast(err.message, "error");
     }
   }
 
   // Re-download a saved report as a PDF (no re-claiming).
-  async function downloadStoredReport(id) {
-    setError("");
-    setStatus("");
+  async function downloadStoredReport(id, from, to) {
     try {
-      await downloadPdf(
-        `${API}/api/reports/${id}/pdf`,
-        `Statement_report_${id}.pdf`
-      );
+      const name =
+        from && to
+          ? `Maarr Expenses ${formatDate(from)} to ${formatDate(to)}.pdf`
+          : `Maarr Expenses ${id}.pdf`;
+      await downloadPdf(`${API}/api/reports/${id}/pdf`, name);
+      toast("Expenses downloaded.", "success");
     } catch (err) {
-      setError(err.message);
+      toast(err.message, "error");
     }
   }
 
@@ -703,7 +768,7 @@ function Ledger({ token, username, role, onLogout }) {
           {/* Claim & download a statement for any date range — admin only */}
           {isAdmin && (
             <div className="dl-bar no-print">
-              <span className="dl-title">Claim &amp; download statement</span>
+              <span className="dl-title">Claim &amp; download expenses</span>
               <label className="dl-field">
                 <span>From</span>
                 <input
@@ -721,10 +786,8 @@ function Ledger({ token, username, role, onLogout }) {
                 />
               </label>
               <button className="btn-primary" onClick={prepareDownload}>
-                ⬇ Download &amp; claim
+                ⬇ Download &amp; claim expenses
               </button>
-              {status && <span className="saved dl-status">{status}</span>}
-              {error && <span className="error-inline dl-status">{error}</span>}
             </div>
           )}
 
@@ -762,14 +825,12 @@ function Ledger({ token, username, role, onLogout }) {
               month={month}
               editable={canEdit}
               lockReason={lockReason}
-              error={error}
-              status={status}
               dirty={dirty}
               setCell={setCell}
               addSameDate={addSameDate}
-              deleteRow={deleteRow}
+              deleteRow={(i) => setPendingDeleteRow(i)}
               onUploadInvoice={uploadInvoice}
-              onDeleteInvoice={deleteInvoice}
+              onDeleteInvoice={(id, name) => setPendingDeleteInvoice({ id, name })}
             />
           </div>
         </>
@@ -781,16 +842,19 @@ function Ledger({ token, username, role, onLogout }) {
           className="modal-overlay no-print"
           onClick={() => setPendingDownload(null)}
         >
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal-title">Download &amp; claim</h3>
+          <div className="modal modal-wide" onClick={(e) => e.stopPropagation()}>
+            <h3 className="modal-title">Download &amp; claim expenses</h3>
             <p className="modal-text">
-              Claim <strong>{pendingDownload.count}</strong> entr
+              Preview of <strong>{pendingDownload.count}</strong> entr
               {pendingDownload.count === 1 ? "y" : "ies"} ({formatDate(dlFrom)} to{" "}
-              {formatDate(dlTo)})?
-              <br />
-              They’ll be locked, saved as a report, and won’t appear on a future
-              download.
+              {formatDate(dlTo)}). <strong>Download expenses only</strong> saves the
+              PDF without changing anything. <strong>Download &amp; claim expenses</strong>{" "}
+              also locks these entries and saves them as a report — they won’t
+              appear on a future download.
             </p>
+            <div className="modal-preview">
+              <StatementTable report={pendingDownload.data} />
+            </div>
             <div className="modal-actions">
               <button
                 className="btn-secondary"
@@ -802,10 +866,84 @@ function Ledger({ token, username, role, onLogout }) {
                 className="btn-secondary"
                 onClick={() => runDownload(false)}
               >
-                Download only
+                ⬇ Download expenses only
               </button>
               <button className="btn-primary" onClick={() => runDownload(true)}>
-                ⬇ Download &amp; claim
+                ⬇ Download &amp; claim expenses
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete-row confirmation — deletion is unrecoverable once the sheet is saved. */}
+      {pendingDeleteRow !== null && rows[pendingDeleteRow] && (
+        <div
+          className="modal-overlay no-print"
+          onClick={() => setPendingDeleteRow(null)}
+        >
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="modal-title">Delete this row?</h3>
+            <div className="modal-item">
+              <strong>
+                {rows[pendingDeleteRow].date
+                  ? formatDate(rows[pendingDeleteRow].date)
+                  : "—"}
+              </strong>
+              {rows[pendingDeleteRow].particulars?.trim()
+                ? ` · ${rows[pendingDeleteRow].particulars.trim()}`
+                : ""}
+              {rows[pendingDeleteRow].debit
+                ? ` · Dr ${money(rows[pendingDeleteRow].debit)}`
+                : ""}
+              {rows[pendingDeleteRow].credit
+                ? ` · Cr ${money(rows[pendingDeleteRow].credit)}`
+                : ""}
+            </div>
+            <p className="modal-text">
+              Once you delete this row <strong>and click Save sheet</strong>, the
+              entry is permanently removed and <strong>cannot be recovered</strong>.
+              Any invoice attached to it is lost too.
+            </p>
+            <div className="modal-actions">
+              <button
+                className="btn-secondary"
+                onClick={() => setPendingDeleteRow(null)}
+              >
+                Cancel
+              </button>
+              <button className="btn-danger-solid" onClick={confirmDeleteRow}>
+                🗑 Delete row
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete-invoice confirmation — the file is removed from the server immediately. */}
+      {pendingDeleteInvoice && (
+        <div
+          className="modal-overlay no-print"
+          onClick={() => setPendingDeleteInvoice(null)}
+        >
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3 className="modal-title">Remove this invoice?</h3>
+            <div className="modal-item">
+              📎 {pendingDeleteInvoice.name || "invoice"}
+            </div>
+            <p className="modal-text">
+              This deletes the file from the server <strong>right away</strong>. It
+              <strong> cannot be recovered</strong> — you’d have to re-upload it.
+            </p>
+            <div className="modal-actions">
+              <button
+                className="btn-secondary"
+                onClick={() => setPendingDeleteInvoice(null)}
+              >
+                Cancel
+              </button>
+              <button className="btn-danger-solid" onClick={confirmDeleteInvoice}>
+                🗑 Remove invoice
               </button>
             </div>
           </div>
@@ -825,8 +963,6 @@ function LedgerTable({
   totalDebit,
   totalCredit,
   closing,
-  error,
-  status,
   dirty,
   month,
   editable,
@@ -844,8 +980,6 @@ function LedgerTable({
           <h2>{monthLabel(month)}</h2>
           <div className="status-line no-print">
             {dirty && <span className="dirty">● Unsaved changes</span>}
-            {status && <span className="saved">{status}</span>}
-            {error && <span className="error-inline">{error}</span>}
           </div>
         </div>
 
@@ -996,7 +1130,7 @@ function LedgerTable({
                               <button
                                 className="inv-x"
                                 title="Remove invoice"
-                                onClick={() => onDeleteInvoice(inv.id)}
+                                onClick={() => onDeleteInvoice(inv.id, inv.name)}
                               >
                                 ×
                               </button>
@@ -1227,28 +1361,26 @@ function naturallyOpen(month) {
 }
 
 function AdminControls({ authFetch }) {
+  const toast = useToast();
   const [settings, setSettings] = useState(null);
   const [year, setYear] = useState(currentYear());
-  const [status, setStatus] = useState("");
-  const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
 
   const load = useCallback(async () => {
-    setError("");
     try {
       const s = await authFetch(`${API}/api/settings`).then((r) => r.json());
       setSettings(s);
     } catch (err) {
-      setError(err.message);
+      setLoadError(err.message);
+      toast(err.message, "error");
     }
-  }, [authFetch]);
+  }, [authFetch, toast]);
 
   useEffect(() => {
     load();
   }, [load]);
 
   async function post(url, body, okMsg) {
-    setError("");
-    setStatus("");
     try {
       const res = await authFetch(url, {
         method: body && body._method === "PUT" ? "PUT" : "POST",
@@ -1259,17 +1391,17 @@ function AdminControls({ authFetch }) {
         const d = await res.json().catch(() => ({}));
         throw new Error(d.error || "Request failed");
       }
-      setStatus(okMsg);
+      toast(okMsg, "success");
       load();
     } catch (err) {
-      setError(err.message);
+      toast(err.message, "error");
     }
   }
 
   if (!settings)
     return (
       <div className="card">
-        <div className="empty">{error || "Loading…"}</div>
+        <div className="empty">{loadError || "Loading…"}</div>
       </div>
     );
 
@@ -1282,13 +1414,6 @@ function AdminControls({ authFetch }) {
 
   return (
     <div className="admin-grid">
-      {(status || error) && (
-        <div className="admin-status">
-          {status && <span className="saved">{status}</span>}
-          {error && <span className="error-inline">{error}</span>}
-        </div>
-      )}
-
       <div className="card admin-card admin-card-wide">
         <div className="lock-head">
           <div>
@@ -1462,7 +1587,7 @@ function ReportsView({ reports, onDownload, authFetch }) {
                     className="btn-secondary btn-mini report-dl"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onDownload(r.id);
+                      onDownload(r.id, r.from, r.to);
                     }}
                   >
                     ⬇ Download

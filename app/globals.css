@@ -1135,6 +1135,43 @@ table.sheet thead th:last-child {
   flex-wrap: wrap;
 }
 
+/* Wider modal for the statement preview. */
+.modal-wide {
+  max-width: 760px;
+}
+
+/* Scrollable statement preview inside the download modal. */
+.modal-preview {
+  max-height: 45vh;
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px;
+  margin: 0 0 18px;
+}
+
+/* Highlighted line describing the row/file being deleted. */
+.modal-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 13px;
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: #0b1220;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Solid red confirm button for destructive dialogs. */
+.btn-danger-solid {
+  background: #dc2626;
+  color: #fff;
+}
+
+.btn-danger-solid:hover {
+  background: #b91c1c;
+}
+
 .date-text {
   display: block;
   padding: 8px 13px;
@@ -1630,5 +1667,100 @@ tfoot td {
   }
   .balance-cell {
     background: #fff;
+  }
+}
+
+/* ============================ Toasts ============================ */
+.toast-wrap {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: min(360px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fff;
+  color: #0b1220;
+  font-size: 14px;
+  line-height: 1.4;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+  border-left: 4px solid #94a3b8;
+  cursor: pointer;
+  animation: toast-in 0.22s ease-out;
+}
+
+.toast-success {
+  border-left-color: #16a34a;
+}
+.toast-error {
+  border-left-color: #dc2626;
+}
+.toast-info {
+  border-left-color: #3b82f6;
+}
+
+.toast-icon {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  margin-top: 1px;
+}
+.toast-success .toast-icon {
+  background: #16a34a;
+}
+.toast-error .toast-icon {
+  background: #dc2626;
+}
+.toast-info .toast-icon {
+  background: #3b82f6;
+}
+
+.toast-msg {
+  flex: 1 1 auto;
+}
+
+.toast-close {
+  flex: 0 0 auto;
+  color: #94a3b8;
+  font-size: 18px;
+  line-height: 1;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .toast-wrap {
+    top: auto;
+    bottom: 14px;
+    left: 14px;
+    right: 14px;
+    max-width: none;
   }
 }

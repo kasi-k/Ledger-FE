@@ -1,8 +1,13 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Expense Tracker",
+  title: "Maarr Expenses",
   description: "Simple expense entry with print support",
+  icons: {
+    icon: "/maarr.png",
+    shortcut: "/maarr.png",
+    apple: "/maarr.png",
+  },
 };
 
 export default function RootLayout({ children }) {
